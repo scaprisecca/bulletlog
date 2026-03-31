@@ -13,20 +13,24 @@
          which uses `(state/get-date-formatter)` — it correctly produces the user-configured journal
          page name for all built-in date formatters. No wrapper needed.
    - 1.4 `logseq.common.util.date-time/date->int` already exists and converts a js/Date to a
-         YYYYMMDD integer. Used directly; no new utility needed."
+         YYYYMMDD integer. Used directly; no new utility needed.
+
+   NOTE: rum/reactive and db-mixins/query produce a class component via rum/build_class.
+   React hooks (rum/use-state) cannot be called inside class component renders.
+   Use rum/defcs + rum/local instead — rum/local stores an atom in class component state
+   and is fully compatible with class-based mixins."
   (:require [frontend.date :as date]
             [frontend.db :as db]
             [frontend.db-mixins :as db-mixins]
             [frontend.handler.page :as page-handler]
             [frontend.handler.route :as route-handler]
-            [frontend.state :as state]
             [logseq.common.util.date-time :as date-time-util]
             [logseq.db :as ldb]
             [logseq.shui.ui :as shui]
             [promesa.core :as p]
             [rum.core :as rum]))
 
-(defn- navigate-to-journal-day!
+(defn navigate-to-journal-day!
   "Navigate to the journal page for the given js/Date, creating it if needed."
   [^js js-date]
   (let [page-name (date/js-date->journal-title js-date)]
@@ -35,23 +39,23 @@
       (p/let [page (page-handler/<create! page-name {:redirect? false})]
         (route-handler/redirect-to-page! (:block/uuid page))))))
 
-(rum/defc journal-calendar < rum/reactive db-mixins/query
-  []
-  (let [today          (js/Date.)
-        [displayed-month set-displayed-month!] (rum/use-state today)
-        year           (.getFullYear displayed-month)
+(rum/defcs journal-calendar < rum/reactive db-mixins/query
+  (rum/local (js/Date.) ::displayed-month)
+  [state & [{:keys [on-day-click]}]]
+  (let [displayed-month* (::displayed-month state)
+        displayed-month  @displayed-month*
+        year             (.getFullYear displayed-month)
         ;; js/Date month is 0-based; :block/journal-day months are 1-based
-        month          (inc (.getMonth displayed-month))
-        conn           (state/get-current-repo)
-        journal-days   (when conn
-                         (ldb/get-journal-days-for-month (db/get-db) year month))
-        has-journal?   (fn [^js d]
-                         (contains? journal-days (date-time-util/date->int d)))]
+        month            (inc (.getMonth displayed-month))
+        journal-days     (when-let [db (db/get-db)]
+                           (ldb/get-journal-days-for-month db year month))
+        has-journal?     (fn [^js d]
+                           (contains? journal-days (date-time-util/date->int d)))]
     [:div.journal-calendar-widget
      (shui/calendar
-      {:mode              "single"
-       :month             displayed-month
-       :on-month-change   set-displayed-month!
-       :on-day-click      navigate-to-journal-day!
-       :modifiers         {:has-journal has-journal?}
+      {:mode                  "single"
+       :month                 displayed-month
+       :on-month-change       #(reset! displayed-month* %)
+       :on-day-click          (or on-day-click navigate-to-journal-day!)
+       :modifiers             {:has-journal has-journal?}
        :modifiers-class-names {:has-journal "day-has-journal"}})]))

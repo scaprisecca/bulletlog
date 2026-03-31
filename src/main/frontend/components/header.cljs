@@ -7,6 +7,7 @@
             [frontend.common.missionary :as c.m]
             [frontend.components.block :as component-block]
             [frontend.components.export :as export]
+            [frontend.components.journal-calendar :as journal-calendar]
             [frontend.components.page-menu :as page-menu]
             [frontend.components.plugins :as plugins]
             [frontend.components.right-sidebar :as sidebar]
@@ -371,6 +372,24 @@
         :size    :sm}
        "Embedding..."))))
 
+(rum/defc calendar-button < rum/reactive
+  []
+  (when (state/enable-journals? (state/get-current-repo))
+    (let [popup-id :journal-calendar-popup]
+      (shui/button-ghost-icon :calendar-event
+                              {:title "Journal calendar"
+                               :on-pointer-down
+                               (fn [^js e]
+                                 (shui/popup-show! (.-target e)
+                                                   (fn [_]
+                                                     (journal-calendar/journal-calendar
+                                                      {:on-day-click (fn [^js d]
+                                                                       (journal-calendar/navigate-to-journal-day! d)
+                                                                       (shui/popup-hide! popup-id))}))
+                                                   {:id popup-id
+                                                    :align "end"
+                                                    :as-dropdown? false}))}))))
+
 (rum/defc ^:large-vars/cleanup-todo header-aux < rum/reactive
   [{:keys [current-repo default-home new-block-mode]}]
   (let [electron-mac? (and util/mac? (util/electron?))
@@ -435,6 +454,8 @@
          (rtc-indicator/uploading-detail))
 
        (semantic-search-progressing current-repo)
+
+       (calendar-button)
 
        (when (and (not= (state/get-current-route) :home)
                   (not custom-home-page?))

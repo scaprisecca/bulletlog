@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Calendar icon button in the header toolbar that opens a popup calendar for quick journal navigation from any page
 - Native journal calendar widget for desktop sidebar and mobile home tab, displaying journal entries for the current month with day-by-day indicators and navigation
 - `get-journal-days-for-month` database query function to efficiently fetch all journal pages in a given month using the journal-day datoms index
 
