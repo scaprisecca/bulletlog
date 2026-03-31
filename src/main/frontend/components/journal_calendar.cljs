@@ -41,14 +41,21 @@
 
 (rum/defcs journal-calendar < rum/reactive db-mixins/query
   (rum/local (js/Date.) ::displayed-month)
+  (rum/local nil ::cached-journal-days)
   [state & [{:keys [on-day-click]}]]
   (let [displayed-month* (::displayed-month state)
+        cached*          (::cached-journal-days state)
         displayed-month  @displayed-month*
         year             (.getFullYear displayed-month)
         ;; js/Date month is 0-based; :block/journal-day months are 1-based
         month            (inc (.getMonth displayed-month))
-        journal-days     (when-let [db (db/get-db)]
-                           (ldb/get-journal-days-for-month db year month))
+        journal-days     (let [[cy cm cdays] (or @cached* [])]
+                           (if (and (= cy year) (= cm month) cdays)
+                             cdays
+                             (when-let [db (db/get-db)]
+                               (let [days (ldb/get-journal-days-for-month db year month)]
+                                 (reset! cached* [year month days])
+                                 days))))
         has-journal?     (fn [^js d]
                            (contains? journal-days (date-time-util/date->int d)))]
     [:div.journal-calendar-widget

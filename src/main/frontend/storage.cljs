@@ -28,6 +28,18 @@
     (when-not util/node-test?
       (dt/read-transit-str ^js (.getItem js/localStorage (name key))))))
 
+(defn read-all
+  "Read all localStorage keys into a keyword->edn-value map in one pass.
+  Used at startup to batch storage reads instead of calling `get` repeatedly."
+  []
+  (when-not util/node-test?
+    (->> (js/Object.entries js/localStorage)
+         (reduce (fn [acc [k v]]
+                   (try
+                     (assoc acc (keyword k) (reader/read-string v))
+                     (catch :default _ acc)))
+                 {}))))
+
 (defn remove
   [key]
   (when-not util/node-test?

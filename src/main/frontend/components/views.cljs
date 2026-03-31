@@ -67,7 +67,7 @@
       (util/app-scroll-container-node view-el)
       (util/app-scroll-container-node))))
 
-(rum/defc header-checkbox < rum/static
+(rum/defc header-checkbox
   [{:keys [selected-all? selected-some? toggle-selected-all!] :as table}]
   (let [[show? set-show!] (rum/use-state false)]
     [:label.h-8.w-8.flex.items-center.justify-center.cursor-pointer
@@ -93,7 +93,7 @@
     :title "Row number"}
    "ID"])
 
-(rum/defc row-checkbox < rum/static
+(rum/defc row-checkbox
   [{:keys [row-selected? row-toggle-selected! data state data-fns]} row _column]
   (let [id (str (:db/id row) "-" "checkbox")
         [show? set-show!] (rum/use-state false)

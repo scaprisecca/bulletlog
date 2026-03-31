@@ -141,7 +141,6 @@
       (el/listen!))
 
     (i18n/start)
-    (instrument/init)
 
     (react/run-custom-queries-when-idle!)
 
@@ -171,6 +170,7 @@
          (p/finally (fn []
                       (state/set-db-restoring! false)
                       (p/resolve! state/app-ready-promise true)
+                      (instrument/init)
                       (log/info ::app-init-spent-time (- (util/time-ms) t1))
                       (when-not (util/mobile?)
                         (p/let [webgpu-available? (db-browser/<check-webgpu-available?)]

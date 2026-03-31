@@ -26,29 +26,39 @@
   <title>Logseq: A privacy-first platform for knowledge management and collaboration</title>
   <meta content="logseq" property="og:site_name">
   <meta content="A privacy-first, open-source platform for knowledge management and collaboration." name="description">
+  <!-- Prefetch non-critical large scripts so the browser fetches them during idle time
+       without competing with React initialization for the JS parser thread. -->
+  <link rel="prefetch" href="./js/pdf_viewer3.mjs" as="script">
+  <link rel="prefetch" href="./js/pdfjs/pdf.mjs" as="script">
+  <link rel="prefetch" href="./js/lsplugin.core.js" as="script">
+  <link rel="prefetch" href="./js/html2canvas.min.js" as="script">
 </head>
 <body>
 <div id="root"></div>
 <script>window.__LSP__HOST__ = true</script>
 <script>window.user = null</script>
+<!-- magic_portal.js must be synchronous — it sets up cross-frame messaging used at startup -->
 <script src="./js/magic_portal.js"></script>
-<script defer src="./js/highlight.min.js"></script>
-<script defer src="./js/interact.min.js"></script>
-<script defer src="./js/marked.min.js"></script>
-<script defer type="module" src="./js/pdfjs/pdf.mjs"></script>
-<script defer type="module" src="./js/pdf_viewer3.mjs"></script>
+<!-- Critical path: React and the main app bundle execute first -->
 <script defer src="./js/eventemitter3.umd.min.js"></script>
-<script defer src="./js/photoswipe.umd.min.js"></script>
-<script defer src="./js/photoswipe-lightbox.umd.min.js"></script>
-<script defer src="./js/html2canvas.min.js"></script>
-<script defer src="./js/lsplugin.core.js"></script>
 <script defer src="./js/react.production.min.js"></script>
 <script defer src="./js/react-dom.production.min.js"></script>
+<script defer src="./js/prop-types.min.js"></script>
 <script defer src="./js/ui.js"></script>
 <script defer src="./js/main.js"></script>
-<script defer src="./js/prop-types.min.js"></script>
+<!-- Secondary: UI helpers needed before user interaction -->
+<script defer src="./js/interact.min.js"></script>
+<script defer src="./js/highlight.min.js"></script>
+<script defer src="./js/marked.min.js"></script>
 <script defer src="./js/tabler-icons-react.min.js"></script>
 <script defer src="./js/tabler.ext.js"></script>
 <script defer src="./js/code-editor.js"></script>
+<!-- Non-critical: large optional features loaded last -->
+<script defer src="./js/photoswipe.umd.min.js"></script>
+<script defer src="./js/photoswipe-lightbox.umd.min.js"></script>
+<script defer src="./js/lsplugin.core.js"></script>
+<script defer type="module" src="./js/pdfjs/pdf.mjs"></script>
+<script defer type="module" src="./js/pdf_viewer3.mjs"></script>
+<script defer src="./js/html2canvas.min.js"></script>
 </body>
 </html>

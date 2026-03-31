@@ -65,9 +65,10 @@
 
 ;; Stores main application state
 (defonce ^:large-vars/data-var state
-  (let [document-mode? (or (storage/get :document/mode?) false)
+  (let [ls             (storage/read-all)
+        document-mode? (or (get ls :document/mode?) false)
         current-graph  (let [url-graph (:graph (util/parse-params))
-                             graph (or url-graph (storage/get :git/current-repo))]
+                             graph (or url-graph (get ls :git/current-repo))]
                          (when graph (ipc/ipc "setCurrentGraph" graph))
                          graph)]
     (atom
@@ -78,7 +79,7 @@
       :reactive/custom-queries               (async/chan 1000)
       :notification/show?                    false
       :notification/content                  nil
-      :instrument/disabled?                  (storage/get "instrument-disabled")
+      :instrument/disabled?                  (get ls :instrument-disabled)
       ;; TODO: how to detect the network reliably?
       ;; NOTE: prefer to use flows/network-online-event-flow
       :network/online?         true
@@ -104,7 +105,7 @@
       ;; left sidebar
       :ui/navigation-item-collapsed?         {"journal-calendar" true
                                                "mobile-journal-calendar" true}
-      :ui/recent-pages                       (or (storage/get :ui/recent-pages) {})
+      :ui/recent-pages                       (or (get ls :ui/recent-pages) {})
 
       ;; right sidebar
       :ui/handbooks-open?                    false
@@ -113,13 +114,13 @@
       :ui/settings-open?                     false
       :ui/sidebar-open?                      false
       :ui/sidebar-width                      "40%"
-      :ui/left-sidebar-open?                 (boolean (storage/get :ls-left-sidebar-open?))
-      :ui/theme                              (or (storage/get :ui/theme) "light")
-      :ui/system-theme?                      ((fnil identity (or util/mac? util/win32? false)) (storage/get :ui/system-theme?))
-      :ui/custom-theme                       (or (storage/get :ui/custom-theme) {:light {:mode "light"} :dark {:mode "dark"}})
-      :ui/wide-mode?                         (storage/get :ui/wide-mode)
-      :ui/radix-color                        (storage/get :ui/radix-color)
-      :ui/editor-font                        (storage/get :ui/editor-font)
+      :ui/left-sidebar-open?                 (boolean (get ls :ls-left-sidebar-open?))
+      :ui/theme                              (or (get ls :ui/theme) "light")
+      :ui/system-theme?                      ((fnil identity (or util/mac? util/win32? false)) (get ls :ui/system-theme?))
+      :ui/custom-theme                       (or (get ls :ui/custom-theme) {:light {:mode "light"} :dark {:mode "dark"}})
+      :ui/wide-mode?                         (get ls :ui/wide-mode)
+      :ui/radix-color                        (get ls :ui/radix-color)
+      :ui/editor-font                        (get ls :ui/editor-font)
 
       ;; ui/collapsed-blocks is to separate the collapse/expand state from db for:
       ;; 1. right sidebar
@@ -131,12 +132,12 @@
       :ui/sidebar-collapsed-blocks           {}
       :ui/root-component                     nil
       :ui/file-component                     nil
-      :ui/developer-mode?                    (or (= (storage/get "developer-mode") "true")
+      :ui/developer-mode?                    (or (= (get ls :developer-mode) "true")
                                                  false)
       ;; remember scroll positions of visited paths
       :ui/paths-scroll-positions             (atom {})
       :ui/main-container-scroll-top          (atom nil)
-      :ui/shortcut-tooltip?                  (if (false? (storage/get :ui/shortcut-tooltip?))
+      :ui/shortcut-tooltip?                  (if (false? (get ls :ui/shortcut-tooltip?))
                                                false
                                                true)
       :ui/scrolling?                         (atom false)
@@ -198,7 +199,7 @@
       ;; It is a list of `[repo db-id block-type block-data]` 4-tuple
       :sidebar/blocks                        '()
 
-      :preferred-language                    (storage/get :preferred-language)
+      :preferred-language                    (get ls :preferred-language)
 
       ;; electron
       :electron/auto-updater-downloaded      false
@@ -210,8 +211,8 @@
       :electron/window-fullscreen?           false
 
       ;; assets
-      :assets/alias-enabled?                 (or (storage/get :assets/alias-enabled?) false)
-      :assets/alias-dirs                     (or (storage/get :assets/alias-dirs) [])
+      :assets/alias-enabled?                 (or (get ls :assets/alias-enabled?) false)
+      :assets/alias-dirs                     (or (get ls :assets/alias-dirs) [])
       :assets/asset-file-write-finish        (atom {})
 
       ;; mobile
@@ -221,7 +222,7 @@
       ;; plugin
       :plugin/enabled                        (and util/plugin-platform?
                                                   ;; true false :theme-only
-                                                  ((fnil identity true) (storage/get ::storage-spec/lsp-core-enabled)))
+                                                  ((fnil identity true) (get ls ::storage-spec/lsp-core-enabled)))
       :plugin/preferences                    nil
       :plugin/indicator-text                 nil
       :plugin/installed-plugins              {}
@@ -250,17 +251,17 @@
       :pdf/system-win?                       false
       :pdf/current                           nil
       :pdf/ref-highlight                     nil
-      :pdf/block-highlight-colored?          (or (storage/get "ls-pdf-hl-block-is-colored") true)
-      :pdf/auto-open-ctx-menu?               (not= false (storage/get "ls-pdf-auto-open-ctx-menu"))
+      :pdf/block-highlight-colored?          (or (get ls :ls-pdf-hl-block-is-colored) true)
+      :pdf/auto-open-ctx-menu?               (not= false (get ls :ls-pdf-auto-open-ctx-menu))
 
       ;; all notification contents as k-v pairs
       :notification/contents                 {}
 
-      :copy/export-block-text-indent-style   (or (storage/get :copy/export-block-text-indent-style)
+      :copy/export-block-text-indent-style   (or (get ls :copy/export-block-text-indent-style)
                                                  "dashes")
-      :copy/export-block-text-remove-options (or (storage/get :copy/export-block-text-remove-options)
+      :copy/export-block-text-remove-options (or (get ls :copy/export-block-text-remove-options)
                                                  #{})
-      :copy/export-block-text-other-options  (or (storage/get :copy/export-block-text-other-options)
+      :copy/export-block-text-other-options  (or (get ls :copy/export-block-text-other-options)
                                                  {})
       :date-picker/date                      nil
 
@@ -279,7 +280,7 @@
       :reactive/query-dbs                    {}
 
       ;; login, userinfo, token, ...
-      :auth/refresh-token                    (some-> (storage/get "refresh-token") str)
+      :auth/refresh-token                    (some-> (get ls :refresh-token) str)
       :auth/access-token                     nil
       :auth/id-token                         nil
 
@@ -296,13 +297,13 @@
       :rtc/asset-upload-download-progress    (atom {})
       :rtc/users-info                        (atom {})
 
-      :user/info                             {:UserGroups (storage/get :user-groups)}
+      :user/info                             {:UserGroups (get ls :user-groups)}
       :encryption/graph-parsing?             false
 
       :ui/loading?                           {}
       :ui/container-id                       (atom 0)
       :ui/cached-key->container-id           (atom {})
-      :feature/enable-sync?                  (storage/get :logseq-sync-enabled)
+      :feature/enable-sync?                  (get ls :logseq-sync-enabled)
 
       :ui/find-in-page                       nil
       :graph/importing                       nil
@@ -314,7 +315,7 @@
       ;; Whether block is selected
       :ui/select-query-cache                 (atom {})
       :ui/toggle-highlight-recent-blocks?    (atom false)
-      :ui/highlight-recent-days              (atom (or (storage/get :ui/highlight-recent-days)
+      :ui/highlight-recent-days              (atom (or (get ls :ui/highlight-recent-days)
                                                        3))
       :favorites/updated?                    (atom 0)
       :db/async-queries                      (atom {})

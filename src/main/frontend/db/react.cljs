@@ -14,9 +14,10 @@
             [promesa.core :as p]))
 
 ;; Query atom of map of Key ([repo q inputs]) -> atom
-;; TODO: replace with LRUCache, only keep the latest 20 or 50 items?
-
+;; Bounded by lru-max entries; oldest entries evicted when limit is exceeded.
+(def ^:private lru-max 200)
 (defonce *query-state (atom {}))
+(defonce ^:private *lru-order (atom []))
 
 ;; [[repo q]]
 (defonce *collapsed-queries (atom {}))
@@ -48,22 +49,38 @@
 (defn clear-query-state!
   []
   (reset! *query-state {})
+  (reset! *lru-order [])
   (reset! *collapsed-queries {}))
+
+(defn- lru-add!
+  "Add k->v to *query-state and track insertion order in *lru-order.
+  Evicts the oldest entry when lru-max is exceeded."
+  [k v]
+  (swap! *query-state assoc k v)
+  (swap! *lru-order
+         (fn [order]
+           (let [order (conj (filterv #(not= % k) order) k)]
+             (if (> (count order) lru-max)
+               (let [evict (first order)]
+                 (swap! *query-state dissoc evict)
+                 (subvec order 1))
+               order)))))
 
 (defn add-q!
   [k query inputs result-atom transform-fn query-fn inputs-fn]
-  (swap! *query-state assoc k {:query query
-                               :inputs inputs
-                               :result result-atom
-                               :transform-fn transform-fn
-                               :query-fn query-fn
-                               :inputs-fn inputs-fn})
+  (lru-add! k {:query query
+               :inputs inputs
+               :result result-atom
+               :transform-fn transform-fn
+               :query-fn query-fn
+               :inputs-fn inputs-fn})
   result-atom)
 
 (defn remove-q!
   [k]
   (when-not (and (= (second k) :custom) (nth k 3))                   ; today query
-    (swap! *query-state dissoc k)))
+    (swap! *query-state dissoc k)
+    (swap! *lru-order #(filterv (fn [x] (not= x k)) %))))
 
 (defn add-query-component!
   [k component]
