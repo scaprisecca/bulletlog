@@ -259,6 +259,18 @@
                      (when (and (entity-util/journal? e) (:db/id e))
                        e))))))))
 
+(defn get-journal-days-for-month
+  "Returns a set of YYYYMMDD integers for journal pages in the given year and month"
+  [db year month]
+  (let [month-start (+ (* year 10000) (* month 100) 1)
+        month-end   (+ (* year 10000) (* month 100) 31)]
+    (->> (d/datoms db :avet :block/journal-day)
+         (keep (fn [d]
+                 (let [v (:v d)]
+                   (when (and (<= month-start v) (<= v month-end))
+                     v))))
+         set)))
+
 (defn- get-structured-datoms
   [db]
   (let [class-property-id (:db/id (d/entity db :logseq.class/Property))]

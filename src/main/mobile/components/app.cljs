@@ -2,6 +2,7 @@
   "App root"
   (:require ["../externals.js"]
             [frontend.components.journal :as journal]
+            [frontend.components.journal-calendar :as journal-calendar]
             [frontend.components.quick-add :as quick-add]
             [frontend.handler.common :as common-handler]
             [frontend.handler.editor :as editor-handler]
@@ -37,12 +38,25 @@
        (shui/skeleton {:class "h-6 w-full"})]
       component)))
 
+(rum/defc mobile-journal-calendar-section < rum/reactive
+  []
+  (let [collapsed? (state/sub [:ui/navigation-item-collapsed? "mobile-journal-calendar"])]
+    [:div.mobile-journal-calendar-section
+     [:div.mobile-journal-calendar-header
+      {:on-click #(state/toggle-navigation-item-collapsed! "mobile-journal-calendar")}
+      [:span.font-medium "Calendar"]
+      [:span.chevron (ui/icon (if collapsed? "chevron-right" "chevron-down") {:size 15})]]
+     (when-not collapsed?
+       (journal-calendar/journal-calendar))]))
+
 (rum/defc home < rum/static
   {:did-mount (fn [state]
                 (ui/inject-document-devices-envs!)
                 state)}
   []
-  (component-with-restoring (journal/all-journals)))
+  [:div#mobile-home
+   (mobile-journal-calendar-section)
+   (component-with-restoring (journal/all-journals))])
 
 (defn use-theme-effects!
   [current-repo theme]

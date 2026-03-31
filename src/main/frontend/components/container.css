@@ -771,3 +771,37 @@ html[data-theme='dark'] {
 .blocks-selection-mode .ls-properties-area {
   @apply select-none;
 }
+
+/* Journal calendar widget */
+.journal-calendar-widget {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.journal-calendar-widget .day-has-journal::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--ls-accent-color);
+  margin: 1px auto 0;
+}
+
+@media (hover: none) {
+  .journal-calendar-widget button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+.mobile-journal-calendar-section {
+  .mobile-journal-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+}

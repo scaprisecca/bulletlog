@@ -616,6 +616,7 @@
 (def get-recent-updated-pages common-initial-data/get-recent-updated-pages)
 
 (def get-latest-journals common-initial-data/get-latest-journals)
+(def get-journal-days-for-month common-initial-data/get-journal-days-for-month)
 
 (defn get-pages-relation
   [db with-journal?]

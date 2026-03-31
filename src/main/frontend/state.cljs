@@ -102,7 +102,8 @@
       :ui/show-property-dialog?              (atom false)
 
       ;; left sidebar
-      :ui/navigation-item-collapsed?         {}
+      :ui/navigation-item-collapsed?         {"journal-calendar" true
+                                               "mobile-journal-calendar" true}
       :ui/recent-pages                       (or (storage/get :ui/recent-pages) {})
 
       ;; right sidebar

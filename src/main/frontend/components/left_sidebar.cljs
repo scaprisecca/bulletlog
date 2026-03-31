@@ -3,6 +3,7 @@
   (:require [clojure.string :as string]
             [frontend.components.block :as block]
             [frontend.components.dnd :as dnd-component]
+            [frontend.components.journal-calendar :as journal-calendar]
             [frontend.components.icon :as icon]
             [frontend.components.repo :as repo]
             [frontend.config :as config]
@@ -271,6 +272,14 @@
                 :active (= (str tag-uuid) (get-in route-match [:path-params :name]))
                 :icon "hash"})))))])))
 
+(rum/defc sidebar-journal-calendar < rum/reactive
+  []
+  (sidebar-content-group
+   [:a.wrap-th [:strong.flex-1 "Calendar"]]
+   {:class "journal-calendar"
+    :collapsable? true}
+   (journal-calendar/journal-calendar)))
+
 (rum/defc sidebar-favorites < rum/reactive
   []
   (let [_favorites-updated? (state/sub :favorites/updated?)
@@ -401,6 +410,9 @@
 
        [:div.sidebar-contents-container
         {:on-scroll on-contents-scroll}
+        (when (state/enable-journals? (state/get-current-repo))
+          (sidebar-journal-calendar))
+
         (sidebar-favorites)
 
         (when (not config/publishing?)
